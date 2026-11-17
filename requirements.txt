@@ -1,0 +1,12 @@
+# Train: chay tren GPU (Colab/Kaggle). CPU chi dung de smoke-test.
+torch>=2.3
+transformers>=4.44
+accelerate>=1.1
+sentencepiece>=0.2
+datasets>=2.20
+sacrebleu>=2.4
+tokenizers>=0.19
+# Xuat/export
+ctranslate2>=4.3
+optimum>=1.21
+onnxruntime>=1.18

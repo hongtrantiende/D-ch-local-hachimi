@@ -1,0 +1,8 @@
+out/
+__pycache__/
+*.pyc
+checkpoint-*/
+data/series/*/train.jsonl
+data/series/*/val.jsonl
+data/series/all/
+*.safetensors
