@@ -55,6 +55,44 @@ chung. Train từ đầu (`--mode scratch`) chỉ làm khi muốn model độc l
 toàn, dùng `scripts/prepare_corpus.py` để lấy vài trăm nghìn cặp câu
 OpenSubtitles zh-vi trước.
 
+## Train theo thể loại — 1 model cho mỗi thể loại
+
+Cách làm khuyên dùng: **một model riêng cho một thể loại** (tiên hiệp, đô thị,
+linh dị...). Mỗi thể loại có vốn dữ liệu đủ lớn để train ngon, và bản dịch giữ
+đúng chất từng thể loại.
+
+**Quy tắc vàng: tất cả model thể loại đều fine-tune từ CÙNG model gốc
+MoxhiMT-60.** Đừng bao giờ train thể loại B từ model của thể loại A — kiến
+thức sẽ bị trôi dần, càng train nhiều model càng lệch.
+
+```bash
+# 1) dữ liệu: data/series/<the-loai>/<the-loai>.zh.txt + .vi.txt (câu lệch dòng)
+python scripts/make_series_data.py
+
+# 2) train (luôn từ model gốc, không phải từ model thể loại khác)
+python scripts/train.py --mode finetune --init DanVP/MoxhiMT-60 \
+  --train data/series/<the-loai>/train.jsonl \
+  --val data/series/<the-loai>/val.jsonl \
+  --out out/<the-loai> --epochs 2
+
+# 3) đánh giá rồi xuất bản INT8 cho box
+python scripts/evaluate.py --model out/<the-loai> --val data/series/<the-loai>/val.jsonl
+python scripts/export_ct2.py --model out/<the-loai> --out out/<the-loai>-ct2-int8
+```
+
+Deploy lên box: copy `out/<the-loai>-ct2-int8/` vào
+`/data/moxhi/genre/<the-loai>/ct2-int8/` trên box. Service tự nhận model mới —
+không cần restart, lần gọi đầu tự load.
+
+Gọi API chọn model thể loại:
+
+```json
+{"text": "...", "source_lang": "auto", "target_lang": "vi", "model": "tuan-hiep"}
+```
+
+Không có trường `"model"` (hoặc `model` rỗng) = dùng model gốc MoxhiMT-60.
+`GET /` trên service trả về danh sách thể loại đang có.
+
 ## Chạy bằng Colab (không cần máy mạnh)
 
 Mở `colab/train_colab.ipynb` trong Google Colab, chọn GPU (T4 free), làm theo
