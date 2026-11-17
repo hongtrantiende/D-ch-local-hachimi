@@ -32,3 +32,27 @@ Lý do:
   thuật ngữ đồng nhất.
 - **Train từ đầu**: chỉ khi muốn độc lập hoàn toàn, cần hàng triệu cặp câu
   (OPUS/OpenSubtitles zh-vi ...) và GPU chạy nhiều ngày.
+
+## Quyết định (đã đo thật trên box)
+
+Đã benchmark `MoxhiMT-60` vs `MoxhiMT-30` (cùng tác giả, cùng tokenizer family)
+trên box 4 vCPU với 5 mẫu võng văn (2026-11-17):
+
+| | 60M (ct2-int8) | 30M (ct2-int8_float32) |
+|---|---|---|
+| Chất lượng 5 mẫu | ngang nhau | ngang nhau |
+| Tốc độ câu ngắn | ~0.35s | ~0.25s |
+| Tốc độ câu dài | ~0.65s | ~0.39s |
+| Kích thước model.bin | 58 MB | 38 MB |
+
+Chọn **MoxhiMT-60 làm model chuẩn để train** vì:
+
+1. Fine-tune từng bộ cần "dung lượng" — 57M tham số tiếp thu thuật ngữ của
+   nhiều bộ truyện mà không làm hỏng kiến thức chung; 30M dễ bão hòa hơn.
+2. Đã deploy sẵn trên box, tokenizer đã cài, đã tối ưu beam.
+3. Điện thoại vẫn chạy tốt 60M (trang Mặc Hi chạy được trong trình duyệt).
+
+MoxhiMT-30 đã tải về box (`/data/moxhi/ct2-30` + `/data/moxhi/tokenizer-30`)
+để làm **biến thể nhanh tùy chọn** — nếu sau này cần ưu tiên tốc độ/điện thoại
+yếu, chỉ cần đổi đường dẫn model trong service, không phải đổi pipeline.
+
